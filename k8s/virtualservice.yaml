@@ -1,1 +1,28 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: svc-gateway
+  namespace: gateway
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - svc-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/trade
+      route:
+        - destination:
+            host: svc-trading-api.exchange.svc.cluster.local
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: /api/wallet
+      route:
+        - destination:
+            host: svc-wallet.wallet.svc.cluster.local
+            port:
+              number: 8080
 
