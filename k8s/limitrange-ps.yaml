@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: LimitRange
+metadata: { name: defaults, namespace: exchange }
+spec:
+  limits:
+    - type: Container
+      defaultRequest: { cpu: "100m", memory: "128Mi" }
+      default:        { cpu: "500m", memory: "512Mi" }
