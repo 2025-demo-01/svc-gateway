@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: svc-gateway
-  namespace: exchange
+  namespace: gateway
   labels:
     release: kube-prometheus-stack
 spec:
