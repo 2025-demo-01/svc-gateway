@@ -38,6 +38,14 @@ spec:
             httpGet: { path: /healthz, port: 8080 }
             initialDelaySeconds: 10
             periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities: { drop: ["ALL"] }
+            seccompProfile: { type: RuntimeDefault }
+
       #  sercret 노출 /구성은 ESO로 주입 선택사항.... 
       # envFrom:
       #   - secretRef: { name: gateway-secret }
