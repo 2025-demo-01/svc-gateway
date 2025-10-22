@@ -2,27 +2,42 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: svc-gateway
-  namespace: gateway
+  namespace: exchange
+  labels: { app: svc-gateway }
 spec:
   replicas: 2
-  selector:
-    matchLabels:
-      app: svc-gateway
+  selector: { matchLabels: { app: svc-gateway } }
   template:
     metadata:
       labels:
         app: svc-gateway
+      annotations:
+        # Prometheus sCRAP(Sidecar 없이 app 자체 노출 시)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: svc-gateway
       containers:
-        - name: gateway
-          image: envoyproxy/envoy:v1.29-latest
+        - name: app
+          image: ghcr.io/2025-demo-01/svc-gateway:0.1.0
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: config
-              mountPath: /etc/envoy
-      volumes:
-        - name: config
-          configMap:
-            name: ratelimit-config
-
+            - name: http
+              containerPort: 8080
+            - name: http-metrics
+              containerPort: 8080
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      #  sercret 노출 /구성은 ESO로 주입 선택사항.... 
+      # envFrom:
+      #   - secretRef: { name: gateway-secret }
