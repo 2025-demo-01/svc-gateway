@@ -1,28 +1,21 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: svc-gateway
-  namespace: gateway
+  name: vs-gateway
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
 spec:
-  hosts:
-    - "*"
-  gateways:
-    - svc-gateway
+  hosts: ["api.exchange.example.com"]
+  gateways: ["public-gateway"]
   http:
-    - match:
-        - uri:
-            prefix: /api/trade
+    - match: [{ uri: { prefix: "/api/v1/trade" } }]
       route:
         - destination:
             host: svc-trading-api.exchange.svc.cluster.local
-            port:
-              number: 8080
-    - match:
-        - uri:
-            prefix: /api/wallet
+            port: { number: 8080 }
+    - match: [{ uri: { prefix: "/api/v1/wallet" } }]
       route:
         - destination:
-            host: svc-wallet.wallet.svc.cluster.local
-            port:
-              number: 8080
-
+            host: svc-wallet.exchange.svc.cluster.local
+            port: { number: 8080 }
