@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: svc-gateway
-  namespace: exchange
+  namespace: gateway
   labels: { app: svc-gateway }
 spec:
   replicas: 2
