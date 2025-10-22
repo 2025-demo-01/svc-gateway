@@ -1,0 +1,9 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  mtls: { mode: STRICT }
