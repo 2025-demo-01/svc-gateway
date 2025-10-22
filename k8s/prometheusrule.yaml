@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gateway-slo
+  namespace: exchange
+  labels: { release: kube-prometheus-stack }
+spec:
+  groups:
+    - name: gateway.slo
+      rules:
+        - alert: GatewayHigh5xx
+          expr: sum(rate(istio_requests_total{reporter="destination",destination_workload="istio-ingressgateway",response_code=~"5.."}[5m]))
+                /
+                sum(rate(istio_requests_total{reporter="destination",destination_workload="istio-ingressgateway"}[5m])) > 0.02
+          for: 5m
+          labels: { severity: page }
+          annotations:
+            summary: "Ingress 5xx > 2% (5m)"
+        - alert: GatewayP95LatencyHigh
+          expr: histogram_quantile(0.95, sum by (le) (rate(istio_request_duration_milliseconds_bucket{destination_workload="istio-ingressgateway"}[5m]))) > 500
+          for: 10m
+          labels: { severity: ticket }
+          annotations:
+            summary: "Ingress P95 > 500ms (10m)"
