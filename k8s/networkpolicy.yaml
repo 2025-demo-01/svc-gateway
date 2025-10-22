@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-except-istio
+  namespace: exchange
+spec:
+  podSelector:
+    matchLabels:
+      app: svc-gateway
+  policyTypes: ["Ingress","Egress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              istio: ingressgateway
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector: {} # Internal Service로 Routing은 Istio Sidecar가 처리
+      ports:
+        - protocol: TCP
+          port: 15090 # istio metrics 등등 Sidecar 통신
