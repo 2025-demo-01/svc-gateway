@@ -10,10 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Install kubeconform
         run: |
           curl -L https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
           sudo mv kubeconform /usr/local/bin/
-      - name: Validate manifests
-        run: kubeconform -strict -output text -summary ./k8s
 
+      # kubeconform 검증 스텝 (추가)
+      - name: Validate manifests with kubeconform
+        run: |
+          kubeconform \
+            -strict \                       # 스키마 엄격 모드
+            -output text \                  # 텍스트 출력
+            -summary \                      # 성공/실패 요약 표시
+            -kubernetes-version 1.29.0 \    # EKS 1.29 기준
+            ./k8s/*.yaml
+
+      #YAML 문법 검사까지 추가하고 싶으면 아래 주석 해제
+      # - name: Lint YAML
+      #   run: |
+      #     pip install yamllint
+      #     yamllint ./k8s
