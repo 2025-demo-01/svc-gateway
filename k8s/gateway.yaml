@@ -1,15 +1,16 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: svc-gateway
-  namespace: gateway
+  name: public-gateway
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   selector:
     istio: ingressgateway
   servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - "*"
+    - port: { number: 443, name: https, protocol: HTTPS }
+      hosts: ["api.exchange.example.com"]
+      tls:
+        mode: SIMPLE
+        credentialName: "acm-tls-cert"  # AWS Load Balancer Controller 통해 ACM 연동 or secret
