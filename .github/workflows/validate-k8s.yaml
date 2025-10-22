@@ -31,3 +31,30 @@ jobs:
       #   run: |
       #     pip install yamllint
       #     yamllint ./k8s
+
+
+      - name: Verify image signatures (cosign)
+        run: |
+          curl -sSL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o cosign
+          chmod +x cosign && sudo mv cosign /usr/local/bin/
+          cosign verify --key cosign.pub ghcr.io/2025-demo-01/svc-gateway:0.1.0
+
+      - name: Conftest (policy gate)
+        run: |
+          curl -sSL https://github.com/open-policy-agent/conftest/releases/download/v0.57.0/conftest_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin
+          # 예: 'mTLS=STRICT' 같은 규칙 검사
+          mkdir -p policies && cat > policies/mtls.rego <<'EOF'
+          package main
+          deny[msg] {
+            input.kind == "PeerAuthentication"
+            not input.spec.mtls.mode
+            msg := "mTLS must be STRICT"
+          }
+          deny[msg] {
+            input.kind == "PeerAuthentication"
+            input.spec.mtls.mode != "STRICT"
+            msg := "mTLS must be STRICT"
+          }
+          EOF
+          conftest test k8s/*.yaml
+
