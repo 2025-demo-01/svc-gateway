@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: security-headers
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  workloadSelector: { labels: { istio: ingressgateway } }
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter: { name: envoy.filters.network.http_connection_manager }
+      patch:
+        operation: INSERT_AFTER
+        value:
+          name: envoy.filters.http.header_to_metadata
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.header_to_metadata.v3.Config
+            request_rules: []  # no-op (placeholder)
+    - applyTo: ROUTE_CONFIGURATION
+      match: { context: GATEWAY }
+      patch:
+        operation: MERGE
+        value:
+          response_headers_to_add:
+            - header: { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }
+            - header: { key: "X-Content-Type-Options", value: "nosniff" }
+            - header: { key: "Referrer-Policy", value: "no-referrer" }
+            - header: { key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" }
