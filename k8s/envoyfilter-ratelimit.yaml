@@ -1,0 +1,50 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: gateway-ratelimit
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    # HTTP 필터 체인에 ratelimit 필터 삽입
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ratelimit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimit
+            domain: "gateway"         # ratelimit-config.yaml의 domain과 일치
+            failure_mode_deny: false
+            timeout: 0.25s
+    # X-RateLimit-Descriptors 설정 (IP / userId 헤더 기반)
+    - applyTo: ROUTE_CONFIGURATION
+      match:
+        context: GATEWAY
+      patch:
+        operation: MERGE
+        value:
+          virtual_hosts:
+          - name: gateway
+            routes:
+            - match: { prefix: "/api/" }
+              route: { cluster: some-upstream } # 더미, Istio가 실제 VS로 대체
+              typed_per_filter_config:
+                envoy.filters.http.ratelimit:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimitPerRoute
+                  rate_limit:
+                    actions:
+                      - request_headers:
+                          header_name: "x-user-id"   # 클라이언트가 보낸 사용자 식별자
+                          descriptor_key: "user_id"
+                      - remote_address: {}           # fallback: IP 기반
