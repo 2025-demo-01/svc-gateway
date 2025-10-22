@@ -1,0 +1,24 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: gateway-authz
+  namespace: exchange
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  selector:
+    matchLabels:
+      app: svc-gateway
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            requestPrincipals: ["https://auth.example.com/*"]   # issuer
+      to:
+        - operation:
+            paths: ["/api/v1/trade/*", "/api/v1/wallet/*"]
+      when:
+        - key: request.auth.claims[aud]
+          values: ["exchange-public-api"]
+        - key: request.auth.claims[scope]
+          values: ["trade:write", "wallet:read", "wallet:write"]
