@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ratelimit-config
-  namespace: exchange
+  namespace: gateway
 data:
   config.yaml: |
     domain: gateway
