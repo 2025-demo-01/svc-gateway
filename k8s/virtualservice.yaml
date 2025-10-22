@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: vs-gateway
-  namespace: exchange
+  namespace: gateway
   annotations:
     argocd.argoproj.io/sync-wave: "10"
 spec:
