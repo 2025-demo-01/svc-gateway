@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: dr-trading-api
-  namespace: exchange
+  namespace: gateway
 spec:
   host: svc-trading-api.exchange.svc.cluster.local
   trafficPolicy:
