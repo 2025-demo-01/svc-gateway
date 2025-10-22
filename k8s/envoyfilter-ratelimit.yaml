@@ -48,3 +48,25 @@ spec:
                           header_name: "x-user-id"   # 클라이언트가 보낸 사용자 식별자
                           descriptor_key: "user_id"
                       - remote_address: {}           # fallback: IP 기반
+     # Envoy가 429 응답 시 아래 header를 자동 포함하게
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter: { name: envoy.filters.network.http_connection_manager }
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            local_reply_config:
+              mappers:
+                - filter: { status_code_filter: { comparison: { op: EQ, value: { default_value: 429 } } } }
+                  body:
+                    inline_string: "Too Many Requests"
+                  headers_to_add:
+                    - header: { key: "Retry-After", value: "60" }
+
+
+                      
