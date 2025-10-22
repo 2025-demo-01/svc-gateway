@@ -2,7 +2,7 @@ apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
 metadata:
   name: gateway-jwt
-  namespace: exchange
+  namespace: gateway
   annotations:
     argocd.argoproj.io/sync-wave: "10"
 spec:
