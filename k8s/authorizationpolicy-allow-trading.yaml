@@ -1,0 +1,12 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-gateway-to-trading
+  namespace: trading
+spec:
+  selector:
+    matchLabels: { app: svc-matching-engine }
+  rules:
+    - from:
+        - source:
+            namespaces: ["trading","gateway"]         # [ADDED] 내부 호출만
